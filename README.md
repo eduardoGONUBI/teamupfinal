@@ -1,1 +1,1 @@
-sports event creation from user to user. see image to understand what was developed
+sports event creation from user to user, 4 microsservices centralized in an api gateway comunicating via rabbitmq. all containerized in docker and deployed in kubernetes env. see image to understand what was developed
