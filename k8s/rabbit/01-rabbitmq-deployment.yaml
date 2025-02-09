@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: laravel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3-management
+        ports:
+        - name: amqp
+          containerPort: 5672
+        - name: management
+          containerPort: 15672
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: "guest"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "guest"
+        livenessProbe:
+          httpGet:
+            path: /api/health/checks/alarms
+            port: 15672
+            httpHeaders:
+            - name: Authorization
+              value: Basic Z3Vlc3Q6Z3Vlc3Q= # Base64-encoded "guest:guest"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /api/health/checks/alarms
+            port: 15672
+            httpHeaders:
+            - name: Authorization
+              value: Basic Z3Vlc3Q6Z3Vlc3Q= # Base64-encoded "guest:guest"
+          initialDelaySeconds: 10
+          periodSeconds: 30

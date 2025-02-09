@@ -1,0 +1,43 @@
+# k8s/app-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-app
+  namespace: laravel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: laravel-app
+  template:
+    metadata:
+      labels:
+        app: laravel-app
+    spec:
+      # The initContainer copies the application code from the image's /var/www to the PVC mounted at /shared-volume.
+      # Then it sets the correct ownership and permissions.
+      initContainers:
+        - name: init-permissions
+          image: egdocker1/arq:testing
+          command: ["sh", "-c", "cp -R /var/www/* /shared-volume && chown -R www-data:www-data /shared-volume && chmod -R 775 /shared-volume/storage /shared-volume/bootstrap/cache"]
+          volumeMounts:
+            - name: app-storage
+              mountPath: /shared-volume
+      containers:
+        - name: app
+          image: egdocker1/arq:testing
+          ports:
+            - containerPort: 9000
+          envFrom:
+            - configMapRef:
+                name: laravel-env
+            - secretRef:
+                name: laravel-secrets
+          # Now that the code is copied and permissions are set in the initContainer, we mount the PVC at /var/www
+          volumeMounts:
+            - name: app-storage
+              mountPath: /var/www
+      volumes:
+        - name: app-storage
+          persistentVolumeClaim:
+            claimName: app-storage-pvc

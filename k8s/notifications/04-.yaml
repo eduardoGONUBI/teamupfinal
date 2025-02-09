@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-noti-pvc
+  namespace: laravel
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-noti
+  namespace: laravel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-noti
+  template:
+    metadata:
+      labels:
+        app: mysql-noti
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:5.7
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "root"
+            - name: MYSQL_DATABASE
+              value: "noti_db"
+            - name: MYSQL_USER
+              value: "user"
+            - name: MYSQL_PASSWORD
+              value: "password"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: mysql-noti-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-noti
+  namespace: laravel
+spec:
+  selector:
+    app: mysql-noti
+  ports:
+    - port: 3306
+      targetPort: 3306

@@ -1,0 +1,32 @@
+# k8s/nginx-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-nginx
+  namespace: laravel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: laravel-nginx
+  template:
+    metadata:
+      labels:
+        app: laravel-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+          # If needed, mount the code. Ideally code is baked into the image, but if you must:
+          # This depends on your workflow. Typically you'd bake code into the image.
+          # - name: app-code
+          #   mountPath: /var/www
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-config

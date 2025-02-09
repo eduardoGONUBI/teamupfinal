@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-app-noti
+  namespace: laravel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: laravel-app-noti
+  template:
+    metadata:
+      labels:
+        app: laravel-app-noti
+    spec:
+      containers:
+        - name: laravel-app
+          image: egdocker1/arq:noti2
+          workingDir: /var/www
+          command: ["supervisord", "-c", "/etc/supervisor/conf.d/supervisor.conf"]
+          envFrom:
+            - configMapRef:
+                name: app-env-noti
+          volumeMounts:
+            - name: env-file
+              mountPath: /var/www/.env
+              subPath: .env
+            - name: supervisor-conf
+              mountPath: /etc/supervisor/conf.d/supervisor.conf
+              subPath: supervisor.conf
+          ports:
+            - containerPort: 9000
+      volumes:
+        - name: env-file
+          configMap:
+            name: app-env-noti
+            items:
+              - key: .env
+                path: .env
+        - name: supervisor-conf
+          configMap:
+            name: supervisor-conf-noti
+            items:
+              - key: supervisor.conf
+                path: supervisor.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: laravel-app-noti
+  namespace: laravel
+spec:
+  selector:
+    app: laravel-app-noti
+  ports:
+    - port: 9000
+      targetPort: 9000

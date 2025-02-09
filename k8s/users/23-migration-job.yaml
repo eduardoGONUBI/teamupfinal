@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: laravel-migrate
+  namespace: laravel
+spec:
+  template:
+    spec:
+      containers:
+        - name: migrate
+          image: egdocker1/arq:testing
+          # Run the Laravel migrate and seed commands
+          command: ["php", "artisan", "migrate", "--seed"]
+          envFrom:
+            - configMapRef:
+                name: laravel-env
+            - secretRef:
+                name: laravel-secrets
+          volumeMounts:
+            - name: app-storage
+              mountPath: /var/www
+      volumes:
+        - name: app-storage
+          persistentVolumeClaim:
+            claimName: app-storage-pvc
+      restartPolicy: Never
+  backoffLimit: 4
