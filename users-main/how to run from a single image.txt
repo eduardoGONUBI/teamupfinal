@@ -1,0 +1,8 @@
+pull ao repositorio
+pull à imagem do dockerhub OU docker build -t testing .
+cd para repositorio
+cp .env.example .env
+editar as variaveis do .env para o correto (db,mail,jwt secret)
+verificar o docker-compose.yml (app, - /var/www/vendor)
+docker-compose up --build -d
+docker-compose exec app php artisan migrate

@@ -1,0 +1,63 @@
+services:
+  webserver:
+    image: nginx:alpine
+    container_name: noti_microservice_webserver
+    restart: unless-stopped
+    ports:
+      - '8083:80'  
+    volumes:
+      - ./:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - testi
+      - shared
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: noti_microservice_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./Certificados:/etc/rabbitmq/certs
+    env_file:
+      - .env
+    depends_on:
+      - mysql-db
+    networks:
+      - testi
+      - shared
+
+  mysql-db:
+    image: mysql:5.7
+    container_name: noti_microservice_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: noti_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3506:3306"  # Expose MySQL on a non-standard port
+    networks:
+      - testi
+
+  redis:
+    image: redis:alpine
+    container_name: redis3
+    restart: unless-stopped
+    ports:
+      - "6679:6379" # Correctly map host port 6479 to container port 6379
+    networks:
+      - testi
+      - shared
+
+networks:
+  testi:
+    driver: bridge
+  shared:
+    external: true
